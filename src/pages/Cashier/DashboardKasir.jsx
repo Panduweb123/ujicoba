@@ -31,7 +31,7 @@ export default function DashboardKasir() {
   const fetchAntrean = async () => {
     const { data } = await supabase
       .from("pesanans")
-      .select("*, mejas(nama_meja)")
+      .select("*, mejas(nomor_meja)")
       .eq("status_bayar", "Pending")
       .order("created_at", { ascending: false });
     if (data) setAntrean(data);
@@ -44,7 +44,7 @@ export default function DashboardKasir() {
       .select(
         `
         *,
-        mejas(nama_meja),
+        mejas(nomor_meja),
         detail_pesanans (
           jumlah,
           menus (nama_menu, harga)
@@ -73,7 +73,7 @@ export default function DashboardKasir() {
 
       const { data, error } = await supabase
         .from("pesanans")
-        .select("*, mejas(nama_meja)")
+        .select("*, mejas(nomor_meja)")
         .eq("kode_pesanan", decodedText)
         .single();
 
@@ -142,7 +142,7 @@ export default function DashboardKasir() {
                     {order.kode_pesanan}
                   </span>
                   <span className="text-xs bg-orange-200 text-orange-800 px-1.5 py-0.5 rounded font-bold">
-                    {order.mejas?.nama_meja || `Meja ${order.meja_id}`}
+                    {order.mejas?.nomor_meja || `Meja ${order.meja_id}`}
                   </span>
                 </div>
                 <div className="font-bold text-orange-600">
@@ -178,7 +178,7 @@ export default function DashboardKasir() {
                     {order.kode_pesanan}
                   </span>
                   <span className="bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded text-xs font-black">
-                    {order.mejas?.nama_meja || `Meja ${order.meja_id}`}
+                    {order.mejas?.nomor_meja || `Meja ${order.meja_id}`}
                   </span>
                 </div>
 
@@ -231,7 +231,7 @@ export default function DashboardKasir() {
               {pesananAktif.kode_pesanan}
             </h2>
             <p className="text-gray-500 mb-6 font-semibold">
-              {pesananAktif.mejas?.nama_meja ||
+              {pesananAktif.mejas?.nomor_meja ||
                 `Meja Nomor ${pesananAktif.meja_id}`}
             </p>
 
