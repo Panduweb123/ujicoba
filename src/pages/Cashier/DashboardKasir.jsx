@@ -29,7 +29,7 @@ export default function DashboardKasir() {
   const fetchAntrean = async () => {
     const { data } = await supabase
       .from("pesanans")
-      .select("*")
+      .select("*, mejas(nama_meja)") // Diperbarui: Mengambil relasi nama meja
       .eq("status_bayar", "Pending")
       .order("created_at", { ascending: false });
     if (data) setAntrean(data);
@@ -49,7 +49,7 @@ export default function DashboardKasir() {
 
       const { data, error } = await supabase
         .from("pesanans")
-        .select("*")
+        .select("*, mejas(nama_meja)") // Diperbarui: Mengambil relasi nama meja
         .eq("kode_pesanan", decodedText)
         .single();
 
@@ -119,8 +119,9 @@ export default function DashboardKasir() {
                   <span className="font-bold text-gray-800">
                     {order.kode_pesanan}
                   </span>
-                  <span className="text-xs bg-orange-200 text-orange-800 px-2 py-1 rounded">
-                    Meja {order.meja_id}
+                  <span className="text-xs bg-orange-200 text-orange-800 px-2 py-1 rounded font-bold">
+                    {/* Diperbarui: Menampilkan nama meja asli */}
+                    {order.mejas?.nama_meja || `Meja ${order.meja_id}`}
                   </span>
                 </div>
                 <div className="font-bold text-orange-600">
@@ -149,8 +150,10 @@ export default function DashboardKasir() {
             <h2 className="text-2xl font-bold text-gray-800 mb-2">
               {pesananAktif.kode_pesanan}
             </h2>
-            <p className="text-gray-500 mb-6">
-              Meja Nomor {pesananAktif.meja_id}
+            <p className="text-gray-600 font-bold mb-6 text-lg">
+              {/* Diperbarui: Menampilkan nama meja asli */}
+              {pesananAktif.mejas?.nama_meja ||
+                `Meja Nomor ${pesananAktif.meja_id}`}
             </p>
 
             <div className="bg-gray-50 p-4 rounded-lg mb-6">
