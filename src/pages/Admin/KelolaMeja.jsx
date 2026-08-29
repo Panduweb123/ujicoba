@@ -6,7 +6,7 @@ export default function KelolaMeja() {
   const [loading, setLoading] = useState(false);
 
   // URL utama aplikasi kamu
-  const baseUrl = "http://localhost:5173";
+  const baseUrl = window.location.origin;
 
   useEffect(() => {
     fetchMejas();
