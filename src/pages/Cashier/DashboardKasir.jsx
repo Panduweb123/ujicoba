@@ -17,7 +17,6 @@ export default function DashboardKasir() {
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "pesanans" },
         (payload) => {
-          // Tambahkan pesanan baru ke antrean teratas
           setAntrean((prev) => [payload.new, ...prev]);
         },
       )
@@ -29,7 +28,7 @@ export default function DashboardKasir() {
   const fetchAntrean = async () => {
     const { data } = await supabase
       .from("pesanans")
-      .select("*, mejas(nama_meja)") // Diperbarui: Mengambil relasi nama meja
+      .select("*, mejas(nama_meja)")
       .eq("status_bayar", "Pending")
       .order("created_at", { ascending: false });
     if (data) setAntrean(data);
@@ -45,12 +44,41 @@ export default function DashboardKasir() {
     scanner.render(onScanSuccess, () => {});
 
     async function onScanSuccess(decodedText) {
-      scanner.pause(); // Hentikan kamera sementara agar tidak scan berulang
+      scanner.pause(); // Hentikan kamera sementara
 
+      // Bersihkan teks jika yang di-scan berbentuk URL lengkap
+      let keyword = decodedText.trim();
+      if (keyword.includes("?")) {
+        // Ambil bagian parameternya saja jika itu URL
+        const urlParams = new URLSearchParams(keyword.split("?")[1]);
+        const mejaParam = urlParams.get("meja");
+        if (mejaParam) {
+          // Jika yang di-scan QR Meja, cari pesanan PENDING berdasarkan meja tersebut
+          const { data: pesananMeja } = await supabase
+            .from("pesanans")
+            .select("*, mejas(nama_meja)")
+            .eq("meja_id", mejaParam)
+            .eq("status_bayar", "Pending")
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .single();
+
+          if (pesananMeja) {
+            setPesananAktif(pesananMeja);
+            return;
+          } else {
+            alert("Tidak ada pesanan Pending di meja ini!");
+            scanner.resume();
+            return;
+          }
+        }
+      }
+
+      // Jika yang di-scan adalah Kode Pesanan langsung (misal: ORD-123456)
       const { data, error } = await supabase
         .from("pesanans")
-        .select("*, mejas(nama_meja)") // Diperbarui: Mengambil relasi nama meja
-        .eq("kode_pesanan", decodedText)
+        .select("*, mejas(nama_meja)")
+        .eq("kode_pesanan", keyword)
         .single();
 
       if (data && data.status_bayar === "Pending") {
@@ -64,7 +92,6 @@ export default function DashboardKasir() {
       }
     }
 
-    // Cleanup kamera saat halaman ditutup
     return () => {
       scanner
         .clear()
@@ -83,9 +110,7 @@ export default function DashboardKasir() {
     if (!error) {
       alert("Pembayaran Berhasil! Struk siap dicetak.");
       setPesananAktif(null);
-      fetchAntrean(); // Segarkan antrean di sebelah kiri
-
-      // Refresh halaman untuk mereset kamera dengan bersih
+      fetchAntrean();
       window.location.reload();
     }
     setIsMemproses(false);
@@ -120,7 +145,6 @@ export default function DashboardKasir() {
                     {order.kode_pesanan}
                   </span>
                   <span className="text-xs bg-orange-200 text-orange-800 px-2 py-1 rounded font-bold">
-                    {/* Diperbarui: Menampilkan nama meja asli */}
                     {order.mejas?.nama_meja || `Meja ${order.meja_id}`}
                   </span>
                 </div>
@@ -138,7 +162,7 @@ export default function DashboardKasir() {
         {!pesananAktif ? (
           <div className="w-full max-w-md bg-white p-6 rounded-xl shadow-lg text-center">
             <h2 className="text-xl font-bold mb-4 text-gray-800">
-              Sorot QR Code Pelanggan
+              Sorot QR Code Pelanggan / Meja
             </h2>
             <div
               id="reader"
@@ -151,7 +175,6 @@ export default function DashboardKasir() {
               {pesananAktif.kode_pesanan}
             </h2>
             <p className="text-gray-600 font-bold mb-6 text-lg">
-              {/* Diperbarui: Menampilkan nama meja asli */}
               {pesananAktif.mejas?.nama_meja ||
                 `Meja Nomor ${pesananAktif.meja_id}`}
             </p>
